@@ -91,7 +91,7 @@ class ALUControl extends Module {
   }.elsewhen(io.aluop === "b001".U && io.funct3 === "b111".U && io.funct7 === "b0000000".U) {
     // 64-bit AND instruction
     io.operation := "b01101".U
-  }.elsewhen(io.aluop === "b001".U && io.funct3 === "111".U && io.funct7 === "b0000001".U) {
+  }.elsewhen(io.aluop === "b001".U && io.funct3 === "b111".U && io.funct7 === "b0000001".U) {
     // 64-bit REMU instruction
     io.operation := "b11011".U
   }.elsewhen(io.aluop === "b011".U && io.funct3 === "b000".U && io.funct7 === "b0000000".U) {
