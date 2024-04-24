@@ -42,8 +42,49 @@ class SingleCycleCPU(implicit val conf: CPUConfig) extends BaseCPU {
     instruction := io.imem.instruction(31, 0)
   }
 
-  //Your code goes here
+  // First, determine the value for aluop
+  when(instruction(6, 0) === "b0110011".U){
+    // means we have OP so 64-bit R-type
+    // means aluop = 001
+    aluControl.io.aluop := "b001".U
+  }.elsewhen(instruction(6, 0) === "b0111011".U){
+    // means we have OP-32 so 32-bit R-type
+    // means aluop = 011
+    aluControl.io.aluop := "b011".U
+  }.otherwise {
+    // NOT IMPLEMENTED other instruction types
+    // So just make it some invalid value that'll raise an error later
+    aluControl.io.aluop := "b111".U
+  }
 
+  // Next we need to get funct3 and funct7
+  aluControl.io.funct3 := instruction(14, 12)
+  aluControl.io.funct7 := instruction(31, 25)
+
+  // We can now get the operation to the alu!
+  alu.io.operation := aluControl.io.operation
+
+  // get registers from instruction (rs1, rs2, rd)
+  registers.io.readreg2 := instruction(24, 20)
+  registers.io.readreg1 := instruction(19, 15)
+  registers.io.writereg := instruction(11, 7)
+
+  // set operands as output of register file
+  alu.io.operand1 := registers.io.readdata1
+  alu.io.operand2 := registers.io.readdata2
+
+  // enable the write to registers (and actually write) ONLY if the writereg is NOT reg0
+  when(registers.io.writereg =/= "b00000".U) {
+    registers.io.wen := true.B
+
+  // set the contents of rd to the result of the alu
+  registers.io.writedata := alu.io.result
+  }
+
+  // to be able to handle multiple instructions, increment pc!
+  pc := pc + 1.U
+  io.imem.address := pc
+  
 }
 
 /*
