@@ -82,8 +82,7 @@ class SingleCycleCPU(implicit val conf: CPUConfig) extends BaseCPU {
   }
 
   // to be able to handle multiple instructions, increment pc!
-  pc := pc + 1.U
-  io.imem.address := pc
+  pc := pc + 4.U // 4-byte aligned instructions
   
 }
 
