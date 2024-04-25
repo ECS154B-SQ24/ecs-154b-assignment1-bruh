@@ -73,13 +73,29 @@ class SingleCycleCPU(implicit val conf: CPUConfig) extends BaseCPU {
   alu.io.operand1 := registers.io.readdata1
   alu.io.operand2 := registers.io.readdata2
 
-  // enable the write to registers (and actually write) ONLY if the writereg is NOT reg0
-  when(registers.io.writereg =/= "b00000".U) {
-    registers.io.wen := true.B
-
-  // set the contents of rd to the result of the alu
-  registers.io.writedata := alu.io.result
+  when(instruction(11, 7) === "b00000".U) {
+    printf("************************IT'S 0\n")
+  }.otherwise{
+    printf("************************rip\n")
   }
+  
+  // enable the write to registers (and actually write) ONLY if the writereg is NOT reg0
+  // So apparently the cpu doesn't like it when I don't write *anything*, even if
+  // the desired register is reg0 which isn't allowed to change.
+  // So to circumvent this, I just used a when.otherwise statment. Whenever the 
+  // destination register is r0, I still write to it... but I just write the value
+  // 0, effectively not writing to it at all.
+
+  registers.io.wen := true.B
+
+  when(instruction(11, 7) === "b00000".U) {
+    // if rd is reg0, write a 0 to it
+    registers.io.writedata := 0.U(64.W)
+  }.otherwise{
+    // otherwise, write the result of the ALU to it
+    registers.io.writedata := alu.io.result
+  }
+
 
   // to be able to handle multiple instructions, increment pc!
   pc := pc + 4.U // 4-byte aligned instructions
